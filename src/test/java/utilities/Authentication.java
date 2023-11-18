@@ -1,17 +1,22 @@
 package utilities;
 
 import io.restassured.builder.RequestSpecBuilder;
+import io.restassured.http.ContentType;
+import io.restassured.path.json.JsonPath;
+import io.restassured.response.Response;
 import io.restassured.specification.RequestSpecification;
 import org.json.JSONObject;
+
+import static io.restassured.RestAssured.given;
 
 public class Authentication {
 
     private static RequestSpecification spec;
 
 
-    public void generateToken(){
+    public static String generateToken(){
 
-        spec =new RequestSpecBuilder().setBaseUri(ConfigReader.getProperty("base_url")).build();
+        spec = new RequestSpecBuilder().setBaseUri(ConfigReader.getProperty("base_url")).build();
         spec.pathParams("pp1","api","pp2","getToken");
 
         JSONObject reqBody=new JSONObject();
@@ -19,5 +24,16 @@ public class Authentication {
         reqBody.put("email",ConfigReader.getProperty("email"));
         reqBody.put("password",ConfigReader.getProperty("pasword"));
 
+        Response response=given()
+                                .spec(spec).contentType(ContentType.JSON)
+                                //.header("Accept","application/json")
+                                .when().body(reqBody.toString())
+                                .post("/{pp1}/{pp2}");
+
+        JsonPath respJP=response.jsonPath();
+
+        String token=respJP.getString("token");
+
+        return token;
     }
 }
